@@ -21,4 +21,18 @@ func Hook(w http.ResponseWriter, req *http.Request) {
 	pushEvent := gh.PushEvent{}
 	hook.Extract(&pushEvent)
 	//TODO
+	// url := "git@github.com:victims/victims-cve-db.git"
+	// cloneDir, err := gh.Clone(url)
+	// if err != nil {
+	// 	log.Logger.Errorf("Web hook failed: %s", err)
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+	//
+	// for _, commit := range pushEvent.Commits {
+	// 	// Probably put this in it's own bounded goroutine
+	// 	for _, file := range commit.Added {
+	// 		gh.GetContent(cloneDir, commit.ID, file)
+	// 	}
+	// }
 }
