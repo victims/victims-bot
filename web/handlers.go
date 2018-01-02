@@ -6,7 +6,7 @@ import (
 	githubhook "gopkg.in/rjz/githubhook.v0"
 
 	"github.com/victims/victims-bot/cmd"
-	"github.com/victims/victims-bot/github"
+	"github.com/victims/victims-bot/gh"
 	"github.com/victims/victims-bot/log"
 )
 
@@ -18,7 +18,7 @@ func Hook(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pushEvent := github.PushEvent{}
+	pushEvent := gh.PushEvent{}
 	hook.Extract(&pushEvent)
 	//TODO
 }

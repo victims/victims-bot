@@ -1,4 +1,4 @@
-package github
+package gh
 
 type Commit struct {
 	ID        string   `json:"id"`
@@ -8,7 +8,7 @@ type Commit struct {
 	Timestamp string   `json:"timestamp"`
 	URL       string   `json:"url"`
 	Author    User     `json:"author"`
-	Committer User     `json:"comitter"`
+	Committer User     `jgithubson:"comitter"`
 	Added     []string `json:"added"`
 	Removed   []string `json:"removed"`
 	Modified  []string `json:"modified"`
