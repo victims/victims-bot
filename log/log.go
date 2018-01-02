@@ -8,6 +8,7 @@ var Logger *logrus.Logger
 // init creates the Logger singleton
 func init() {
 	Logger = logrus.New()
+	Logger.Formatter = &logrus.JSONFormatter{}
 	Logger.Level = logrus.DebugLevel
 	Logger.Debug("Logger initialized")
 }
