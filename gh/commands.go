@@ -143,3 +143,18 @@ func CommitChange(path string) (string, error) {
 
 	return newHash.String(), nil
 }
+
+// Push pushes local changes to the remote repo.
+func Push(path string) error {
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		log.Logger.Warnf("Unable to open repo at %s. %s", path, err)
+		return err
+	}
+
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+	})
+
+	return err
+}
