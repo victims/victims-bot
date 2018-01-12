@@ -2,10 +2,13 @@ package gh
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	plumingObject "gopkg.in/src-d/go-git.v4/plumbing/object"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/victims/victims-bot/log"
@@ -79,6 +82,7 @@ func GetContent(path, hash, fileName string) (string, error) {
 	}
 
 	for {
+		log.Logger.Debug("Iter")
 		file, err := files.Next()
 		if err != nil {
 			log.Logger.Warn(err)
@@ -93,4 +97,49 @@ func GetContent(path, hash, fileName string) (string, error) {
 		}
 	}
 	return "", errors.New("file not found")
+}
+
+// CommitChange commits a change back to the local checkout.
+// Returns the hash string of the commit
+func CommitChange(path string) (string, error) {
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		log.Logger.Warnf("Unable to open repo at %s. %s", path, err)
+		return "", err
+	}
+
+	tree, err := repo.Worktree()
+	if err != nil {
+		log.Logger.Errorf("Unable to open worktree: %s", err)
+		return "", err
+	}
+
+	hash, err := tree.Add(path)
+	if err != nil {
+		log.Logger.Errorf("Unable to add %s to worktree: %s", path, err)
+		return "", err
+	}
+	log.Logger.Infof("Locally added %s: %s", path, hash)
+
+	// Info for the commit options
+	signature := plumingObject.Signature{
+		Name:  "victims-bot",
+		Email: "victims-bot@users.noreply.github.com",
+		When:  time.Now(),
+	}
+
+	// Options passed into tree.Commit
+	commitOps := git.CommitOptions{
+		Author:    &signature,
+		Committer: &signature,
+	}
+	// The commit message
+	commitMsg := fmt.Sprintf("Add hashes to %s", path)
+	newHash, err := tree.Commit(commitMsg, &commitOps)
+	if err != nil {
+		log.Logger.Errorf("Unable to commit %s to worktree: %s", path, err)
+		return "", err
+	}
+
+	return newHash.String(), nil
 }
