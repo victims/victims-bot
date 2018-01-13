@@ -116,6 +116,7 @@ type Repository struct {
 	MasterBranch     string `json:"master_branch"`
 }
 
+// PushEvent represents a push event from GitHub
 type PushEvent struct {
 	Ref        string     `json:"ref"`
 	Before     string     `json:"before"`
@@ -130,4 +131,11 @@ type PushEvent struct {
 	Repository Repository `json:"repository"`
 	Pusher     Owner      `json:"pusher"`
 	Sender     Sender     `json:"sender"`
+}
+
+// PingEvent represents a ping event from GitHub
+type PingEvent struct {
+	Zen    string `json:"zen"`
+	HookId string `json:"hook_id"`
+	Hook   string `json:"hook"`
 }
