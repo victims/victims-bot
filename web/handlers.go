@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	githubhook "gopkg.in/rjz/githubhook.v0"
@@ -35,22 +36,40 @@ func Hook(w http.ResponseWriter, req *http.Request) {
 	}
 	//fmt.Fprintf(w, cloneDir)
 
+	// NOTE: that if anything fails while processing the change the entire
+	// set of work will not be pushed back to the repo
 	for _, commit := range pushEvent.Commits {
 		// Probably put this in it's own bounded goroutine
 		for _, file := range commit.Added {
-			contents, err := gh.GetContent(cloneDir, commit.ID, file)
+			_, err := gh.GetContent(cloneDir, commit.ID, file)
 			if err != nil {
 				log.Logger.Errorf("Error getting contents: %s", err)
-			} else {
-				// TODO: Submit to the hash service
-				// TODO: Update the file
-				// newHash, err := gh.CommitChange(file)
-				// if err != nil {
-				// 	log.Logger.Errorf("Error committing change: %s", err)
-				// }
-				// TODO: Push results back to repo
-				log.Logger.Infof("%d", len(contents))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			// TODO: Submit to the hash service
+			// hashes, err := process.SubmitPackage(fileName, "")
+			// if err := process.AddHashesToFile(file, hashes); err != nil {
+			// 	log.LoggerInfof("Unable to add hash to file: %s", err)
+			// 	w.WriteHeader(http.StatusInternalServerError)
+			// 	return
+			// }
+			_, err = gh.CommitChange(file)
+			if err != nil {
+				log.Logger.Errorf("Error committing change: %s", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 		}
 	}
+
+	if err = gh.Push(cloneDir); err != nil {
+		log.Logger.Errorf("Unable to push change: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Success")
+
 }
