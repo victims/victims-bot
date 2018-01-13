@@ -53,17 +53,23 @@ func pushEvent(hook *githubhook.Hook, w http.ResponseWriter, req *http.Request) 
 	event := gh.PushEvent{}
 	//json.Unmarshal(body, &pushEvent)
 	hook.Extract(&event)
-	url := "https://github.com/victims/victims-cve-db.git" //"git@github.com:victims/victims-cve-db.git"
-	cloneDir, err := gh.Clone(url)
+	cloneDir, err := gh.Clone(cmd.Config.GitRepo)
 	if err != nil {
 		log.Logger.Errorf("Web hook failed: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	// The number of commits made locally
+	commits := 0
 	// NOTE: that if anything fails while processing the change the entire
 	// set of work will not be pushed back to the repo
 	for _, commit := range event.Commits {
+		if commit.Author.Usersname == cmd.Config.GitHubUsername {
+			log.Logger.Infof(
+				"Skipping %s as it was authord by the bot", commit.Author.Usersname)
+			continue
+		}
 		// Probably put this in it's own bounded goroutine
 		for _, file := range commit.Added {
 			_, err = gh.GetContent(cloneDir, commit.ID, file)
@@ -86,16 +92,20 @@ func pushEvent(hook *githubhook.Hook, w http.ResponseWriter, req *http.Request) 
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+			// If we get here we've made a new local commit
+			commits = commits + 1
 		}
 	}
 
-	// Push the commits back to the repo
-	if err = gh.Push(cloneDir); err != nil {
-		log.Logger.Errorf("Unable to push change: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	// If we have at least 1 commit then push
+	if commits > 0 {
+		// Push the commits back to the repo
+		if err = gh.Push(cloneDir); err != nil {
+			log.Logger.Errorf("Unable to push change: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
-
 	// Give a generic success response
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Success")
