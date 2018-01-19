@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: victims-bot
+  spec:
+    ports:
+    - port: 9999
+      targetPort: 9999
+    selector:
+      deploymentconfig: victims-bot
+- apiVersion: v1
+  kind: DeploymentConfig
+metadata:
+  name: "victims-bot"
+spec:
+  template:
+    metadata:
+      labels:
+        name: "victims-bot"
+    spec:
+      containers:
+        - name: "victims-bot"
+          image: "victims/victims-bot"
+          ports:
+            - containerPort: 9999
+              protocol: "TCP"
+          env:
+            - name: VICTIMS_BOT_BIND
+              value: "0.0.0.0:9999"
+            - name: VICTIMS_BOT_GITHUB_USERNAME
+              value: "victims-bot"
+            - name: VICTIMS_BOT_GIT_REPO
+              value: "git@github.com:victims/victims-cve-db.git"
+            - name: VICTIMS_BOT_SECRET
+              value: ".................SECRET.................."
+  replicas: 2
+  selector:
+    name: "victims-bot"
+  triggers:
+    - type: "ConfigChange"
+    - type: "ImageChange"
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - "victims-bot"
+        from:
+          kind: "ImageStreamTag"
+          name: "victims-bot:latest"
+  strategy:
+    type: "Rolling"
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: victims-bot
+  spec:
+    dockerImageRepository: victims/victims-bot
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: victims-bot
+  spec:
+    host: victi.ms
+    path: "/hook"
+    to:
+      kind: Service
+      name: victims-bot
+    tls:
+      termination: edge
+      key: |-
+        -----BEGIN PRIVATE KEY-----
+        [...]
+        -----END PRIVATE KEY-----
+      certificate: |-
+        -----BEGIN CERTIFICATE-----
+        [...]
+        -----END CERTIFICATE-----
+      caCertificate: |-
+        -----BEGIN CERTIFICATE-----
+        [...]
+        -----END CERTIFICATE-----

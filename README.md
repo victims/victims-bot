@@ -31,3 +31,9 @@ Configuration
 | git-repo        | VICTIMS_BOT_GIT_REPO        | Repo to push/modify/pull   |
 | github-username | VICTIMS_BOT_GITHUB_USERNAME | GitHub username of the bot |
 | secret          | VICTIMS_BOT_SECRET          | GitHub secret for webhooks |
+
+
+Deployment
+==========
+
+* [OpenShift](/deployment/openshift/)
