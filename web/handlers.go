@@ -60,6 +60,13 @@ func pushEvent(hook *githubhook.Hook, w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
+	// Exit out early if the push was done by the bot
+	if event.Pusher.Name == cmd.Config.GitHubUsername {
+		log.Logger.Infof("Ignoring push as it was done by me")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	// The number of commits made locally
 	commits := 0
 	// NOTE: that if anything fails while processing the change the entire
@@ -67,7 +74,7 @@ func pushEvent(hook *githubhook.Hook, w http.ResponseWriter, req *http.Request) 
 	for _, commit := range event.Commits {
 		if commit.Author.Usersname == cmd.Config.GitHubUsername {
 			log.Logger.Infof(
-				"Skipping %s as it was authord by the bot", commit.Author.Usersname)
+				"Skipping %s as it was authord by me", commit.Author.Usersname)
 			continue
 		}
 		// Probably put this in it's own bounded goroutine
