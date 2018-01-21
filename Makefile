@@ -38,6 +38,10 @@ clean:
 image: clean deps static-victims-bot
 	sudo docker build -t $(IMAGE_VERSION_TAG) -t $(IMAGE_DATE_TAG) .
 
+test: clean deps
+	govendor test -v -cover github.com/victims/victims-bot/process github.com/victims/victims-bot/cmd github.com/victims/victims-bot/web
+
+
 gofmt:
 	gofmt -l cmd/ log/ web/ main.go
 

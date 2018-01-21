@@ -27,6 +27,8 @@ type CVEDBEntry struct {
 	Hash        string       `yaml:"hash"`
 	FileHashes  []FileResult `yaml:"file_hashes"`
 	Affected    []Affected   `yaml:"affected"`
+	URL         string       `yaml:"url"`
+	Name        string       `yaml:"name"`
 }
 
 // AddHashesToFile adds hash information to a cvedb file
