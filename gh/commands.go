@@ -6,12 +6,13 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/victims/victims-bot/cmd"
+	"github.com/victims/victims-bot/log"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	plumingObject "gopkg.in/src-d/go-git.v4/plumbing/object"
-
-	"github.com/Sirupsen/logrus"
-	"github.com/victims/victims-bot/log"
+	httpTransport "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 // Clone clones a remote git repository
@@ -157,8 +158,9 @@ func Push(path string) error {
 		log.Logger.Warnf("Unable to open repo at %s. %s", path, err)
 		return err
 	}
-
+	transport := httpTransport.NewBasicAuth(cmd.Config.GitHubUsername, cmd.Config.GitHubPassword)
 	err = repo.Push(&git.PushOptions{
+		Auth:       transport,
 		RemoteName: "origin",
 	})
 

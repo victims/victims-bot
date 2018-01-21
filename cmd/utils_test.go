@@ -12,6 +12,8 @@ func TestParseFlags(t *testing.T) {
 	// secret is required
 	secret := []byte("test")
 	os.Setenv("VICTIMS_BOT_SECRET", string(secret))
+	os.Setenv("VICTIMS_BOT_GITHUB_PASSWORD", "shhh")
+
 	ParseFlags()
 	if Config.Secret != string(secret) {
 		t.Errorf("Config.Secret returned bad data. %s != %s", Config.Secret, secret)

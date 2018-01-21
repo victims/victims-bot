@@ -57,8 +57,9 @@ func TestPingEventWithBadData(t *testing.T) {
 
 // TestHookWithImproperBadData verifies Hook errors if improper data is passed
 func TestHookWithImproperBadData(t *testing.T) {
-	// Manually set the secret
+	// Manually set the secret and password
 	cmd.Config.Secret = "test"
+	cmd.Config.GitHubPassword = "secret"
 	// Create the test server
 	testServer := httptest.NewServer(http.HandlerFunc(Hook))
 	defer testServer.Close()
@@ -78,8 +79,9 @@ func TestHookWithImproperBadData(t *testing.T) {
 
 // TestHookWithGoodPing verifies good pings make it through and repsond properly
 func TestHookWithGoodPing(t *testing.T) {
-	// Manually set the secret
+	// Manually set the secret and password
 	cmd.Config.Secret = "test"
+	cmd.Config.GitHubPassword = "secret"
 	// Create the test server
 	testServer := httptest.NewServer(http.HandlerFunc(Hook))
 	defer testServer.Close()
@@ -112,8 +114,10 @@ func TestHookWithGoodPing(t *testing.T) {
 func TestHookWithPushEvent(t *testing.T) {
 	os.Setenv("VICTIMS_BOT_TEST", "1")
 	cmd.Config.GitRepo = "https://github.com/victims/victims-cve-db.git"
-	// Manually set the secret
+	// Manually set the secret and password
 	cmd.Config.Secret = "test"
+	cmd.Config.GitHubPassword = "secret"
+
 	// Create the test server
 	testServer := httptest.NewServer(http.HandlerFunc(Hook))
 	defer testServer.Close()

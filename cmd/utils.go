@@ -10,6 +10,7 @@ type Configuration struct {
 	Secret         string
 	BindTo         string
 	GitHubUsername string
+	GitHubPassword string
 	GitRepo        string
 }
 
@@ -46,6 +47,9 @@ func ParseFlags() {
 	flag.StringVar(&Config.GitHubUsername, "github-username",
 		getEnv("VICTIMS_BOT_GITHUB_USERNAME", "victims-bot"),
 		"Name of the bot in GitHub to know what events to ignore")
+	flag.StringVar(&Config.GitHubPassword, "github-password",
+		getEnv("VICTIMS_BOT_GITHUB_PASSWORD", ""),
+		"Password used to access GitHub")
 	flag.StringVar(
 		&Config.GitRepo, "git-repo",
 		getEnv("VICTIMS_BOT_GIT_REPO", "git@github.com:victims/victims-cve-db.git"),
@@ -55,7 +59,7 @@ func ParseFlags() {
 	flag.Parse()
 
 	// secret must be given
-	if Config.Secret == "" {
+	if Config.Secret == "" || Config.GitHubPassword == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
