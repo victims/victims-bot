@@ -1,11 +1,14 @@
 package web
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/victims/victims-bot/cmd"
 	"github.com/victims/victims-bot/gh"
 
 	githubhook "gopkg.in/rjz/githubhook.v0"
@@ -48,5 +51,58 @@ func TestPingEventWithBadData(t *testing.T) {
 	pingEvent(&hook, recorder, request)
 	if recorder.Code != http.StatusInternalServerError {
 		t.Errorf("Expected %d got %d", http.StatusInternalServerError, recorder.Code)
+	}
+}
+
+// TestHookWithImproperBadData verifies Hook errors if improper data is passed
+func TestHookWithImproperBadData(t *testing.T) {
+	// Manually set the secret
+	cmd.Config.Secret = "test"
+	// Create the test server
+	testServer := httptest.NewServer(http.HandlerFunc(Hook))
+	defer testServer.Close()
+
+	// Post without any data
+	resp, err := http.Post(testServer.URL, "application/json", nil)
+	if err != nil {
+		t.Errorf("Errored trying to create ping: %s", err)
+		t.Fail()
+	}
+
+	// The result should be ISE
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("Expected %d got %d", http.StatusInternalServerError, resp.StatusCode)
+	}
+}
+
+// TestHookWithGoodPing verifies good pings make it through and repsond properly
+func TestHookWithGoodPing(t *testing.T) {
+	// Manually set the secret
+	cmd.Config.Secret = "test"
+	// Create the test server
+	testServer := httptest.NewServer(http.HandlerFunc(Hook))
+	defer testServer.Close()
+
+	// Set up the request
+	postData, _ := ioutil.ReadFile("testdata/ping.json")
+	req, err := http.NewRequest("POST", testServer.URL, bytes.NewReader(postData))
+	if err != nil {
+		t.Errorf("Errored trying to create ping: %s", err)
+		t.Fail()
+	}
+	req.Header.Set("X-Hub-Signature", "sha1=5e13e22615a472ab78d659ed9482478faab4a25d")
+	req.Header.Set("X-GitHub-Event", "ping")
+	req.Header.Set("X-Github-Delivery", "72d3162e-cc78-11e3-81ab-4c9367dc0958")
+
+	// Submit the request
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Errorf("Errored trying to post ping: %s", err)
+		t.Fail()
+	}
+
+	// The result should be OK
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected %d got %d", http.StatusOK, resp.StatusCode)
 	}
 }
