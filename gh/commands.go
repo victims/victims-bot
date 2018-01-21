@@ -81,8 +81,11 @@ func GetContent(path, hash, fileName string) (string, error) {
 		return "", err
 	}
 
+	iterations := 0
+	defer func() { log.Logger.Debugf("Iterations: %d", iterations) }()
+
 	for {
-		log.Logger.Debug("Iter")
+		iterations = iterations + 1
 		file, err := files.Next()
 		if err != nil {
 			log.Logger.Warn(err)
@@ -92,7 +95,10 @@ func GetContent(path, hash, fileName string) (string, error) {
 		if file == nil {
 			break
 		} else if file.Name == fileName {
-			contents, _ := file.Contents()
+			contents, err := file.Contents()
+			if err != nil {
+				return "", err
+			}
 			return contents, nil
 		}
 	}
@@ -101,8 +107,8 @@ func GetContent(path, hash, fileName string) (string, error) {
 
 // CommitChange commits a change back to the local checkout.
 // Returns the hash string of the commit
-func CommitChange(path string) (string, error) {
-	repo, err := git.PlainOpen(path)
+func CommitChange(repoPath, path string) (string, error) {
+	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		log.Logger.Warnf("Unable to open repo at %s. %s", path, err)
 		return "", err
