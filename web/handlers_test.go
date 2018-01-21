@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/victims/victims-bot/cmd"
@@ -94,6 +95,39 @@ func TestHookWithGoodPing(t *testing.T) {
 	req.Header.Set("X-GitHub-Event", "ping")
 	req.Header.Set("X-Github-Delivery", "72d3162e-cc78-11e3-81ab-4c9367dc0958")
 
+	// Submit the request
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Errorf("Errored trying to post ping: %s", err)
+		t.Fail()
+	}
+
+	// The result should be OK
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected %d got %d", http.StatusOK, resp.StatusCode)
+	}
+}
+
+// TestHookWithPushEvent verifies the process when a good hook is sent
+func TestHookWithPushEvent(t *testing.T) {
+	os.Setenv("VICTIMS_BOT_TEST", "1")
+	cmd.Config.GitRepo = "https://github.com/victims/victims-cve-db.git"
+	// Manually set the secret
+	cmd.Config.Secret = "test"
+	// Create the test server
+	testServer := httptest.NewServer(http.HandlerFunc(Hook))
+	defer testServer.Close()
+
+	// Set up the request
+	postData, _ := ioutil.ReadFile("testdata/push.json")
+	req, err := http.NewRequest("POST", testServer.URL, bytes.NewReader(postData))
+	if err != nil {
+		t.Errorf("Errored trying to create push: %s", err)
+		t.Fail()
+	}
+	req.Header.Set("X-Hub-Signature", "sha1=7c487f2cf15fa372b29621ad5e5d57d52c9d98d4")
+	req.Header.Set("X-GitHub-Event", "push")
+	req.Header.Set("X-Github-Delivery", "72d3162e-cc78-11e3-81ab-4c9367dc0958")
 	// Submit the request
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
