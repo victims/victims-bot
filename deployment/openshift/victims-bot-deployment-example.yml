@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: List
 items:
+
 - apiVersion: v1
   kind: Service
   metadata:
@@ -13,44 +14,46 @@ items:
       deploymentconfig: victims-bot
 - apiVersion: v1
   kind: DeploymentConfig
-metadata:
-  name: "victims-bot"
-spec:
-  template:
-    metadata:
-      labels:
-        name: "victims-bot"
-    spec:
-      containers:
-        - name: "victims-bot"
-          image: "victims/victims-bot"
-          ports:
-            - containerPort: 9999
-              protocol: "TCP"
-          env:
-            - name: VICTIMS_BOT_BIND
-              value: "0.0.0.0:9999"
-            - name: VICTIMS_BOT_GITHUB_USERNAME
-              value: "victims-bot"
-            - name: VICTIMS_BOT_GIT_REPO
-              value: "git@github.com:victims/victims-cve-db.git"
-            - name: VICTIMS_BOT_SECRET
-              value: ".................SECRET.................."
-  replicas: 2
-  selector:
+  metadata:
     name: "victims-bot"
-  triggers:
-    - type: "ConfigChange"
-    - type: "ImageChange"
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - "victims-bot"
-        from:
-          kind: "ImageStreamTag"
-          name: "victims-bot:latest"
-  strategy:
-    type: "Rolling"
+  spec:
+    template:
+      metadata:
+        labels:
+          name: "victims-bot"
+      spec:
+        containers:
+          - name: "victims-bot"
+            image: "victims/victims-bot"
+            ports:
+              - containerPort: 9999
+                protocol: "TCP"
+            env:
+              - name: VICTIMS_BOT_BIND
+                value: "0.0.0.0:9999"
+              - name: VICTIMS_BOT_GITHUB_USERNAME
+                value: "victims-bot"
+              - name: VICTIMS_BOT_GITHUB_PASSWORD
+                value: "TODO"
+              - name: VICTIMS_BOT_GIT_REPO
+                value: "https://github.com/victims/victims-cve-db.git"
+              - name: VICTIMS_BOT_SECRET
+                value: "TODO"
+    replicas: 2
+    selector:
+      name: "victims-bot"
+    triggers:
+      - type: "ConfigChange"
+      - type: "ImageChange"
+        imageChangeParams:
+          automatic: true
+          containerNames:
+            - "victims-bot"
+          from:
+            kind: "ImageStreamTag"
+            name: "victims-bot:latest"
+    strategy:
+      type: "Rolling"
 - apiVersion: v1
   kind: ImageStream
   metadata:
