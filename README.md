@@ -30,6 +30,7 @@ Configuration
 | bind            | VICTIMS_BOT_BIND            | Host:Port to listen on     |
 | git-repo        | VICTIMS_BOT_GIT_REPO        | Repo to push/modify/pull   |
 | github-username | VICTIMS_BOT_GITHUB_USERNAME | GitHub username of the bot |
+| github-password | VICTIMS_BOT_GITHUB_PASSWORD | GitHub password to push    |
 | secret          | VICTIMS_BOT_SECRET          | GitHub secret for webhooks |
 
 
