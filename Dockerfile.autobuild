@@ -1,0 +1,23 @@
+FROM centos:latest
+MAINTAINER Steve Milner
+
+RUN yum update -y --setopt=tsflags=nodocs
+
+RUN yum install git make golang --setopt=tsflags=nodocs -y
+
+RUN mkdir -p /work/src/github.com/victims/victims-bot && \
+    cd work/src && \
+    git clone https://github.com/ashcrow/victims-bot.git github.com/victims/victims-bot && \
+    cd github.com/victims/victims-bot && \
+    git rev-parse HEAD > /code-hash && \
+    export GOPATH=/work/ && \
+    export PATH=$PATH:/work/bin && \
+    make deps && \
+    make static-victims-bot && \
+    mv victims-bot /victims-bot && \
+    cd / && \
+    rm -rf /work && \
+    yum remove -y golang
+
+EXPOSE 9999
+ENTRYPOINT ["/victims-bot"]
