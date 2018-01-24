@@ -1,4 +1,4 @@
-FROM busybox:latest
+FROM centos:latest
 MAINTAINER Steve Milner
 
 COPY ./victims-bot /victims-bot
