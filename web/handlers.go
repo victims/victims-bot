@@ -111,31 +111,33 @@ func pushEvent(hook *githubhook.Hook, w http.ResponseWriter, req *http.Request) 
 				continue
 			}
 			log.Logger.Debugf("%#v", entry)
-			// Continue on if the URL is not provided
-			if entry.URL == "" || entry.Name == "" {
-				// TODO: Maybe auto open up a GitHub issue
-				log.Logger.Errorf("Unable to download package for %s due to missing data", file)
-				continue
+
+			packageName := entry.Name
+			// No name? Fall back to the first artifactID
+			if packageName == "" {
+				packageName = entry.Affected[0].ArtifactID
 			}
 
-			if isTest == "" {
-				// TODO: Download the artifact
-				// fileName, err := process.GetPackage(entry.Name, entry.URL)
-				// if err != nil {
-				// 	log.Logger.Errorf("Unable to download package: %s", err)
-				// 	w.WriteHeader(http.StatusInternalServerError)
-				// 	return
-				// }
-				// TODO: Submit to the hash service
-				// hashes, err := process.SubmitPackage(fileName, "")
-				// if err := process.AddHashesToFile(file, hashes); err != nil {
-				// 	log.LoggerInfof("Unable to add hash to file: %s", err)
-				// 	w.WriteHeader(http.StatusInternalServerError)
-				// 	return
-				// }
-			} else {
-				log.Logger.Info("Skipping package submission due to testing")
+			for _, url := range entry.PackageURLs {
+				log.Logger.Debugf("Will download from %s", url)
+				if isTest == "" {
+					fileName, err := process.GetPackage(entry.Name, url)
+					if err != nil {
+						log.Logger.Errorf("Unable to download package: %s", err)
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					hashes, err := process.SubmitPackage(fileName, "")
+					if err := process.AddHashesToFile(file, *hashes); err != nil {
+						log.Logger.Infof("Unable to add hash to file: %s", err)
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+				} else {
+					log.Logger.Info("Skipping package submission due to testing")
+				}
 			}
+
 			_, err = gh.CommitChange(cloneDir, file)
 			if err != nil {
 				log.Logger.Errorf("Error committing change: %s", err)
