@@ -24,21 +24,16 @@ type CVEDBEntry struct {
 	Description string       `yaml:"description"`
 	CVSSV2      string       `yaml:"cvss_v2"`
 	References  []string     `yaml:"references"`
-	Hash        string       `yaml:"hash"`
+	Hashes      []FileResult `yaml:"hashes"`
 	FileHashes  []FileResult `yaml:"file_hashes"`
 	Affected    []Affected   `yaml:"affected"`
-	URL         string       `yaml:"url"`
+	PackageURLs []string     `yaml:"package_urls"`
 	Name        string       `yaml:"name"`
 }
 
 // AddHashesToFile adds hash information to a cvedb file
-func AddHashesToFile(fileName string, hashes HashResult) error {
+func AddHashesToFile(fileName string, hashes []HashResult) error {
 	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		log.Logger.Errorf("Unable to read file %s: %s", fileName, err)
-		return err
-	}
-
 	// Unmarshal file into a struct
 	cvedbEntry := CVEDBEntry{}
 	if err = yaml.Unmarshal(data, &cvedbEntry); err != nil {
@@ -46,10 +41,20 @@ func AddHashesToFile(fileName string, hashes HashResult) error {
 		return err
 	}
 
-	// Add the hash info
-	cvedbEntry.Hash = hashes.Hash
-	cvedbEntry.FileHashes = hashes.Files
+	for _, hash := range hashes {
+		if err != nil {
+			log.Logger.Errorf("Unable to read file %s: %s", fileName, err)
+			return err
+		}
 
+		// Add the hash info
+		// TODO: VERIFY THIS
+		cvedbEntry.Hashes = append(
+			cvedbEntry.Hashes, FileResult{Name: hash.Name, Hash: hash.Hash})
+		for _, fileHashes := range hash.Files {
+			cvedbEntry.FileHashes = append(cvedbEntry.FileHashes, fileHashes)
+		}
+	}
 	// Marshal the contents back and write the results to disk
 	result, err := yaml.Marshal(cvedbEntry)
 	if err != nil {
@@ -62,6 +67,5 @@ func AddHashesToFile(fileName string, hashes HashResult) error {
 		log.Logger.Errorf("Unable to write update to file %s: %s", fileName, err)
 		return err
 	}
-
 	return nil
 }
