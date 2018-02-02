@@ -7,6 +7,8 @@ BUILD_TIME := $(shell date +%s)
 IMAGE_VERSION_TAG := victims-bot:$(VERSION)
 IMAGE_DATE_TAG := victims-bot:$(BUILD_TIME)
 
+PACKAGES := process/ cmd/ log/ web/
+
 # Used during all builds
 LDFLAGS := -X main.version=${VERSION} -X main.commitHash=${COMMIT_HASH} -X main.buildTime=${BUILD_TIME}
 
@@ -45,10 +47,10 @@ test: clean deps
 	govendor test -v -cover github.com/victims/victims-bot/process github.com/victims/victims-bot/cmd github.com/victims/victims-bot/web
 
 gofmt:
-	gofmt -l cmd/ log/ web/ main.go
+	gofmt -l ${PACKAGES} main.go
 
 golint:
 	go get github.com/golang/lint/golint
-	golint cmd/ log/ web/
+	golint ${PACKAGES}
 
 lint: gofmt golint
